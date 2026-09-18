@@ -328,43 +328,20 @@ class AdminController extends Controller
     public function indexPeminjaman(Request $request)
     {
         $search = $request->input('search');
-        $status = $request->input('status');
-        $dariTanggal = $request->input('dari_tanggal');
-        $sampaiTanggal = $request->input('sampai_tanggal');
 
-        $peminjamans = Peminjaman::with(['user', 'detailPinjam.alat', 'pengembalian'])
+        $peminjamans = Peminjaman::with(['user', 'detailPinjam.alat'])
             ->when($search, function ($query, $search) {
                 return $query->where('status', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%");
                     });
             })
-            ->when($status && $status !== 'semua', function ($query) use ($status) {
-                return $query->where('status', $status);
-            })
-            ->when($dariTanggal, function ($query) use ($dariTanggal) {
-                return $query->whereDate('tgl_pinjam', '>=', $dariTanggal);
-            })
-            ->when($sampaiTanggal, function ($query) use ($sampaiTanggal) {
-                return $query->whereDate('tgl_pinjam', '<=', $sampaiTanggal);
-            })
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
-        $totalSelesai = Peminjaman::where('status', 'dikembalikan')->count();
-        $totalTelat   = Peminjaman::where('status', 'telat')->count();
-        $totalDenda   = Pengembalian::sum('denda');
-
-        return view('admin.peminjaman.index', compact(
-            'peminjamans',
-            'search',
-            'totalSelesai',
-            'totalTelat',
-            'totalDenda'
-        ));
+        return view('admin.peminjaman.index', compact('peminjamans', 'search'));
     }
-
 
     public function createPeminjaman()
     {
