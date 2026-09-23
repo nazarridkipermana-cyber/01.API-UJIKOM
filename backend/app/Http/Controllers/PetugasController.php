@@ -7,6 +7,7 @@ use App\Models\Pengembalian;
 use App\Models\Alat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PetugasController extends Controller
 {
@@ -49,24 +50,29 @@ class PetugasController extends Controller
         }
     }
 
-    // Memproses pengembalian alat, catat denda/kondisi, kembalikan stok
+    // Memproses pengembalian alat, hitung denda otomatis, kembalikan stok
     public function prosesPengembalian(Request $request, $peminjamanId)
     {
         $request->validate([
             'kondisi_kembali' => 'required|string',
-            'denda' => 'nullable|integer',
         ]);
 
         DB::beginTransaction();
         try {
             $peminjaman = Peminjaman::with('detailPinjam')->findOrFail($peminjamanId);
 
+            // Denda otomatis: flat Rp10.000 jika sudah lewat tgl_kembali_plan
+            $telat = now()->startOfDay()->greaterThan(
+                Carbon::parse($peminjaman->tgl_kembali_plan)->startOfDay()
+            );
+            $denda = $telat ? 10000 : 0;
+
             // Simpan data pengembalian
             Pengembalian::create([
                 'peminjaman_id' => $peminjaman->id,
                 'tgl_kembali' => now(),
                 'kondisi_kembali' => $request->kondisi_kembali,
-                'denda' => $request->denda ?? 0,
+                'denda' => $denda,
                 'petugas_id' => auth()->id(),
             ]);
 
@@ -81,18 +87,20 @@ class PetugasController extends Controller
             }
 
             DB::commit();
-            return redirect()->back()->with('success', 'Pengembalian berhasil dicatat dan stok dipulihkan.');
+
+            $pesanDenda = $telat ? ' Terlambat, denda Rp10.000 otomatis diterapkan.' : '';
+            return redirect()->back()->with('success', 'Pengembalian berhasil dicatat dan stok dipulihkan.' . $pesanDenda);
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
-    // Menampilkan daftar peminjaman yang masih aktif (status = dipinjam)
+    // Menampilkan daftar peminjaman yang masih aktif (status = dipinjam / telat)
     public function indexPengembalian()
     {
         $peminjamans = Peminjaman::with(['user', 'detailPinjam.alat'])
-            ->where('status', 'dipinjam')
+            ->whereIn('status', ['dipinjam', 'telat'])
             ->latest()
             ->get();
 

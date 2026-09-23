@@ -38,10 +38,8 @@ class PengembalianController extends Controller
     {
         $user = auth()->user();
 
-        // Eager load relasi
         $pengembalian->load(['peminjaman.user', 'peminjaman.detailPinjam.alat', 'petugas']);
 
-        // Otorisasi privasi
         if ($user->role === 'peminjam' && $pengembalian->peminjaman->user_id !== $user->id) {
             return response()->json(['message' => 'Akses ditolak.'], 403);
         }
@@ -71,13 +69,23 @@ class PengembalianController extends Controller
                 // Jika hari ini lebih besar dari tanggal rencana kembali, maka telat
                 $statusPeminjamanBaru = $hariIni->greaterThan($tglKembaliPlan) ? 'telat' : 'dikembalikan';
 
+                // Hitung denda otomatis berdasarkan kondisi alat saat kembali.
+                // Backend jadi source of truth untuk Rusak Ringan & Rusak Berat.
+                // Untuk "Hilang" (atau kondisi lain di luar keduanya), pakai nominal manual dari petugas.
+                $denda = match ($request->kondisi_kembali) {
+                    'Baik' => 0,
+                    'Rusak Ringan' => 300000,
+                    'Rusak Berat' => 1000000,
+                    default => $request->denda ?? 0,
+                };
+
                 // 1. Insert data ke tabel pengembalian
                 $pengembalian = Pengembalian::create([
                     'peminjaman_id' => $peminjaman->id,
                     'tgl_kembali' => now()->toDateString(),
                     'kondisi_kembali' => $request->kondisi_kembali,
-                    'denda' => $request->denda ?? 0, // Default 0 jika null
-                    'petugas_id' => auth()->id(), // Ambil ID user (petugas) yang sedang login
+                    'denda' => $denda,
+                    'petugas_id' => auth()->id(),
                 ]);
 
                 // 2. Ubah status di tabel peminjaman utama
@@ -86,7 +94,6 @@ class PengembalianController extends Controller
                 // 3. Kembalikan (tambah) stok alat berdasarkan detail_pinjam
                 foreach ($peminjaman->detailPinjam as $detail) {
                     $alat = Alat::lockForUpdate()->find($detail->alat_id);
-                    // increment() otomatis menambah nilai pada field yang ditentukan
                     $alat->increment('stok', $detail->jumlah);
                 }
 
@@ -95,7 +102,6 @@ class PengembalianController extends Controller
                     'aktivitas' => "Memproses pengembalian peminjaman ID: {$peminjaman->id} dengan status akhir: {$statusPeminjamanBaru}."
                 ]);
 
-                // Load relasi agar response JSON lebih informatif
                 return $pengembalian->load(['peminjaman.user', 'petugas']);
             });
 
@@ -105,14 +111,12 @@ class PengembalianController extends Controller
             ], 201);
 
         } catch (Exception $e) {
-            // Tangkap pesan error dari throw exception di atas (misal status bukan 'dipinjam')
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }
 
     public function update(UpdatePengembalianRequest $request, Pengembalian $pengembalian): JsonResponse
     {
-        // Mengamankan data dengan membatasi field yang boleh dikoreksi petugas
         $pengembalian->update([
             'kondisi_kembali' => $request->kondisi_kembali,
             'denda' => $request->denda ?? $pengembalian->denda,
@@ -130,7 +134,6 @@ class PengembalianController extends Controller
             DB::transaction(function () use ($pengembalian) {
                 $peminjaman = Peminjaman::with('detailPinjam')->lockForUpdate()->findOrFail($pengembalian->peminjaman_id);
 
-                // Tarik kembali stok ke gudang (karena status kembali dibatalkan, stok berkurang lagi)
                 foreach ($peminjaman->detailPinjam as $detail) {
                     $alat = Alat::lockForUpdate()->findOrFail($detail->alat_id);
 
@@ -141,10 +144,8 @@ class PengembalianController extends Controller
                     $alat->decrement('stok', $detail->jumlah);
                 }
 
-                // Kembalikan status peminjaman master menjadi dipinjam kembali
                 $peminjaman->update(['status' => 'dipinjam']);
 
-                // Log Aktivitas jika metode/relasi tersedia
                 auth()->user()->logAktivitas()?->create(['aktivitas' => "Membatalkan pengembalian ID: #{$pengembalian->id}"]);
 
                 $pengembalian->delete();

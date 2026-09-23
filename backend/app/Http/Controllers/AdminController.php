@@ -11,6 +11,7 @@ use App\Models\Kategori;
 use App\Models\User;
 use App\Models\LogAktivitas;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -492,8 +493,11 @@ class AdminController extends Controller
     {
         $search = $request->input('search');
 
+        // Sertakan status 'telat' juga, karena command harian
+        // (peminjaman:cek-telat) bisa mengubah status jadi telat
+        // sebelum alat benar-benar dikembalikan.
         $peminjamans = Peminjaman::with(['user', 'detailPinjam.alat'])
-            ->where('status', 'dipinjam')
+            ->whereIn('status', ['dipinjam', 'telat'])
             ->when($search, function ($query, $search) {
                 return $query->whereHas('user', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%");
@@ -510,8 +514,8 @@ class AdminController extends Controller
     {
         $peminjaman = Peminjaman::with(['user', 'detailPinjam.alat'])->findOrFail($id);
 
-        if ($peminjaman->status != 'dipinjam') {
-            return redirect()->route('admin.pengembalian.index')->with('error', 'Peminjaman ini tidak dalam status dipinjam.');
+        if (!in_array($peminjaman->status, ['dipinjam', 'telat'])) {
+            return redirect()->route('admin.pengembalian.index')->with('error', 'Peminjaman ini tidak dalam status dipinjam/telat.');
         }
 
         return view('admin.pengembalian.create', compact('peminjaman'));
@@ -521,18 +525,23 @@ class AdminController extends Controller
     {
         $request->validate([
             'kondisi_kembali' => 'required|string',
-            'denda' => 'nullable|integer|min:0',
         ]);
 
         DB::beginTransaction();
         try {
             $peminjaman = Peminjaman::with('detailPinjam')->findOrFail($id);
 
+            // Denda otomatis: flat Rp10.000 jika sudah lewat tgl_kembali_plan
+            $telat = now()->startOfDay()->greaterThan(
+                Carbon::parse($peminjaman->tgl_kembali_plan)->startOfDay()
+            );
+            $denda = $telat ? 10000 : 0;
+
             Pengembalian::create([
                 'peminjaman_id' => $peminjaman->id,
                 'tgl_kembali' => now(),
                 'kondisi_kembali' => $request->kondisi_kembali,
-                'denda' => $request->denda ?? 0,
+                'denda' => $denda,
                 'petugas_id' => auth()->id(),
             ]);
 
@@ -542,13 +551,15 @@ class AdminController extends Controller
                 $detail->alat->increment('stok', $detail->jumlah);
             }
 
+            $pesanDenda = $telat ? ' Terlambat, denda Rp10.000 otomatis diterapkan.' : '';
+
             LogAktivitas::create([
                 'user_id' => auth()->id(),
-                'aktivitas' => 'Memproses pengembalian alat untuk peminjaman #' . $peminjaman->id . ' (' . ($peminjaman->user->name ?? '-') . ')',
+                'aktivitas' => 'Memproses pengembalian alat untuk peminjaman #' . $peminjaman->id . ' (' . ($peminjaman->user->name ?? '-') . ').' . $pesanDenda,
             ]);
 
             DB::commit();
-            return redirect()->route('admin.pengembalian.index')->with('success', 'Pengembalian berhasil diproses dan stok alat dipulihkan.');
+            return redirect()->route('admin.pengembalian.index')->with('success', 'Pengembalian berhasil diproses dan stok alat dipulihkan.' . $pesanDenda);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());

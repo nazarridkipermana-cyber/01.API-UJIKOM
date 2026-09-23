@@ -35,62 +35,58 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-100 text-gray-600 text-sm uppercase tracking-wider">
-                        <th class="py-3 px-4 border-b">Gambar</th>
-                        <th class="py-3 px-4 border-b">Nama Alat</th>
-                        <th class="py-3 px-4 border-b">Kategori</th>
-                        <th class="py-3 px-4 border-b">Stok</th>
-                        <th class="py-3 px-4 border-b">Kondisi</th>
-                        <th class="py-3 px-4 border-b">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-700 text-sm">
-                    @forelse($alats as $alat)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="py-3 px-4 border-b">
-                                @if($alat->gambar)
-                                    <img src="{{ asset($alat->gambar) }}" alt="{{ $alat->nama_alat }}" class="w-12 h-12 object-cover rounded-lg border">
-                                @else
-                                    <span class="text-xs text-gray-400 italic">Tidak ada</span>
-                                @endif
-                            </td>
-                            <td class="py-3 px-4 border-b font-medium text-gray-900">{{ $alat->nama_alat }}</td>
-                            <td class="py-3 px-4 border-b">{{ $alat->kategori->nama_kategori ?? '-' }}</td>
-                            <td class="py-3 px-4 border-b font-semibold">{{ $alat->stok }}</td>
-                            <td class="py-3 px-4 border-b">
-                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full
+        <div class="p-5">
+            @if($alats->isEmpty())
+                <p class="text-center text-gray-500 py-8">Belum ada data alat.</p>
+            @endif
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+                @foreach($alats as $alat)
+                    <div class="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition bg-white flex flex-col">
+                        <div class="w-full aspect-square bg-gray-50">
+                            @if($alat->gambar)
+                                <img src="{{ asset($alat->gambar) }}" alt="{{ $alat->nama_alat }}"
+                                    class="w-full h-full object-cover">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="p-3 flex flex-col flex-1">
+                            <h4 class="font-semibold text-gray-900 text-sm leading-snug line-clamp-2 mb-1">{{ $alat->nama_alat }}</h4>
+                            <p class="text-xs text-gray-500 mb-2">{{ $alat->kategori->nama_kategori ?? '-' }}</p>
+
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs text-gray-600">Stok: <span class="font-semibold text-gray-900">{{ $alat->stok }}</span></span>
+                                <span class="px-2 py-0.5 text-xs font-semibold rounded-full
                                     @if(strtolower($alat->status_kondisi) == 'baik') bg-emerald-100 text-emerald-800
                                     @else bg-amber-100 text-amber-800 @endif">
                                     {{ $alat->status_kondisi }}
                                 </span>
-                            </td>
-                            <td class="py-3 px-4 border-b">
-                                <div class="flex items-center space-x-2">
-                                    <a href="{{ route('admin.alat.edit', $alat->id) }}"
-                                        class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded text-xs font-semibold transition">
-                                        Edit
-                                    </a>
+                            </div>
 
-                                    <form action="{{ route('admin.alat.destroy', $alat->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus alat ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-semibold transition">
-                                            Hapus
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="py-4 text-center text-gray-500">Belum ada data alat.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                            <div class="flex items-center gap-2 mt-auto">
+                                <a href="{{ route('admin.alat.edit', $alat->id) }}"
+                                    class="flex-1 text-center bg-amber-500 hover:bg-amber-600 text-white px-2 py-1.5 rounded text-xs font-semibold transition">
+                                    Edit
+                                </a>
+
+                                <form action="{{ route('admin.alat.destroy', $alat->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus alat ini?')" class="flex-1">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-xs font-semibold transition">
+                                        Hapus
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
         </div>
 
         <div class="p-4 border-t border-gray-200 bg-gray-50">

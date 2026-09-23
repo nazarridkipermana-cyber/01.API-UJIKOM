@@ -19,7 +19,7 @@ class StorePengembalianRequest extends FormRequest
                 Rule::exists('peminjaman', 'id')
             ],
             'kondisi_kembali' => ['required', 'string', 'max:255'],
-            'denda' => ['nullable', 'integer', 'min:0'],
+            'denda' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 

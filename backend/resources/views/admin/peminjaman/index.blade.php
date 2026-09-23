@@ -1,6 +1,6 @@
-@extends('layouts.petugas')
+@extends('layouts.app')
 
-@section('title', 'Cetak Laporan - Dashboard Petugas')
+@section('title', 'Kelola Peminjaman - Dashboard Admin')
 
 @section('content')
 

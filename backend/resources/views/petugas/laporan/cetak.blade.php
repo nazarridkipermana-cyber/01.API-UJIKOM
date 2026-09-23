@@ -3,15 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>Cetak Laporan Peminjaman Alat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; font-size: 12px; color: #333; margin: 20px; }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .header h2, .header p { margin: 2px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; vertical-align: top; }
-        th { background-color: #f4f4f4; }
+        body { font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; color: #1B1F27; margin: 28px; }
+        .header { text-align: center; margin-bottom: 22px; border-bottom: 2px solid #1B1F27; padding-bottom: 12px; }
+        .header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 17px; letter-spacing: 0.02em; margin: 0 0 4px; }
+        .header p { margin: 2px 0; color: #706B5C; }
+        table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+        th, td { border: 1px solid #E5E1D6; padding: 7px 9px; text-align: left; vertical-align: top; }
+        th { background-color: #F9F8F5; font-weight: 500; color: #706B5C; text-transform: none; }
+        td { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; }
+        td:nth-child(2) { font-family: 'IBM Plex Sans', sans-serif; }
         .text-center { text-align: center; }
-        .footer { margin-top: 30px; float: right; text-align: center; }
+        .footer { margin-top: 34px; float: right; text-align: center; }
+        .footer p { margin: 2px 0; }
         @media print {
             .no-print { display: none; }
         }
@@ -19,9 +24,9 @@
 </head>
 <body onload="window.print()">
 
-    <div class="no-print" style="margin-bottom: 20px; background: #e2e8f0; padding: 10px; border-radius: 5px; text-align: right;">
-        <button onclick="window.print()" style="background: #2563eb; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">Cetak Sekarang</button>
-        <button onclick="window.close()" style="background: #64748b; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 5px;">Tutup</button>
+    <div class="no-print" style="margin-bottom: 20px; background: #F3F1EC; padding: 10px; border-radius: 6px; text-align: right;">
+        <button onclick="window.print()" style="background: #C98A3B; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Cetak sekarang</button>
+        <button onclick="window.close()" style="background: #14181F; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; margin-left: 6px;">Tutup</button>
     </div>
 
     <div class="header">
@@ -36,7 +41,7 @@
                 s/d {{ \Carbon\Carbon::parse(request('sampai_tanggal'))->format('d-m-Y') }}
             </p>
         @else
-            <p style="font-size: 11px;">Periode: Semua Data</p>
+            <p style="font-size: 11px;">Periode: Semua data</p>
         @endif
     </div>
 
@@ -45,10 +50,10 @@
             <tr>
                 <th width="5%" class="text-center">No</th>
                 <th width="20%">Peminjam</th>
-                <th width="15%">Tgl Pinjam</th>
-                <th width="15%">Rencana Kembali</th>
+                <th width="15%">Tgl pinjam</th>
+                <th width="15%">Rencana kembali</th>
                 <th width="15%">Status</th>
-                <th width="20%">Detail Alat</th>
+                <th width="20%">Detail alat</th>
                 <th width="10%">Denda</th>
             </tr>
         </thead>
