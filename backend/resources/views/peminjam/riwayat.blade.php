@@ -4,69 +4,65 @@
 
 @section('content')
 
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Riwayat & Pengembalian Alat</h1>
-            <p class="text-sm text-gray-500 mt-1">{{ $peminjamans->count() }} total peminjaman</p>
-        </div>
+    <div class="mb-8">
+        <div class="font-mono text-xs text-[#706B5C] mb-1">riwayat</div>
+        <h1 class="font-display text-2xl font-semibold text-[#1B1F27]">Riwayat & Pengembalian Alat</h1>
+        <p class="text-sm text-[#706B5C] mt-1 font-mono">{{ $peminjamans->count() }} total peminjaman</p>
     </div>
 
-    <div class="space-y-5">
+    <div class="space-y-3">
         @forelse($peminjamans as $peminjaman)
             @php
                 $badgeMap = [
-                    'diajukan'     => ['Diajukan', 'bg-amber-100 text-amber-700', 'bg-amber-400', 'border-l-amber-400'],
-                    'dipinjam'     => ['Sedang Dipinjam', 'bg-blue-100 text-blue-700', 'bg-blue-500', 'border-l-blue-500'],
-                    'dikembalikan' => ['Dikembalikan', 'bg-emerald-100 text-emerald-700', 'bg-emerald-500', 'border-l-emerald-500'],
+                    'diajukan'     => ['Diajukan', 'text-[#A9792F]', 'border-l-[#A9792F]'],
+                    'dipinjam'     => ['Sedang Dipinjam', 'text-[#3B6E71]', 'border-l-[#3B6E71]'],
+                    'dikembalikan' => ['Dikembalikan', 'text-[#3F7D58]', 'border-l-[#3F7D58]'],
                 ];
-                [$label, $badgeClass, $dotClass, $borderClass] = $badgeMap[$peminjaman->status] ?? [ucfirst($peminjaman->status), 'bg-gray-100 text-gray-700', 'bg-gray-400', 'border-l-gray-300'];
+                [$label, $textClass, $borderClass] = $badgeMap[$peminjaman->status] ?? [ucfirst($peminjaman->status), 'text-[#706B5C]', 'border-l-[#E5E1D6]'];
                 $denda = optional($peminjaman->pengembalian)->denda;
             @endphp
 
-            <div class="bg-white rounded-2xl border border-gray-200 border-l-4 {{ $borderClass }} shadow-sm p-6 hover:shadow-md transition">
+            <div class="bg-white rounded-md border border-[#E5E1D6] border-l-2 {{ $borderClass }} p-6 hover:bg-[#FAF9F6] transition">
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-10 h-10 rounded-md bg-[#14181F] text-white flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-400 font-medium">Peminjaman #{{ $peminjaman->id }}</p>
-                            <p class="text-lg font-bold text-gray-900">
+                            <p class="text-xs text-[#706B5C] font-mono">Peminjaman #{{ $peminjaman->id }}</p>
+                            <p class="font-display text-lg font-semibold text-[#1B1F27] font-mono">
                                 {{ optional($peminjaman->tgl_pinjam)->format('d M Y') ?? '-' }}
-                                <span class="text-gray-400 font-normal mx-1">&rarr;</span>
+                                <span class="text-[#706B5C] font-normal mx-1">&rarr;</span>
                                 {{ optional($peminjaman->tgl_kembali_plan)->format('d M Y') ?? '-' }}
                             </p>
                         </div>
                     </div>
 
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold {{ $badgeClass }} flex-shrink-0">
-                        <span class="w-1.5 h-1.5 rounded-full {{ $dotClass }}"></span>
+                    <span class="inline-flex items-center gap-1.5 text-xs font-mono {{ $textClass }} flex-shrink-0">
+                        <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
                         {{ $label }}
                     </span>
                 </div>
 
-                <div class="pl-0 sm:pl-14">
-                    <p class="text-xs uppercase tracking-wider text-gray-400 mb-2 font-semibold">Alat Dipinjam</p>
-                    <div class="flex flex-wrap gap-2 mb-4">
+                <div class="pl-0 sm:pl-13">
+                    <p class="text-xs text-[#706B5C] mb-2">Alat dipinjam</p>
+                    <div class="flex flex-wrap gap-1.5 mb-4">
                         @forelse($peminjaman->detailPinjam as $detail)
-                            <span class="inline-flex items-center gap-1.5 text-sm bg-blue-50 text-blue-700 rounded-full px-3 py-1.5 border border-blue-100">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                                </svg>
+                            <span class="inline-flex items-center gap-1.5 text-xs bg-[#F3F1EC] text-[#1B1F27] rounded px-2.5 py-1 font-mono">
                                 {{ $detail->alat->nama_alat ?? 'Alat Dihapus' }}
-                                <span class="text-blue-400 font-semibold">×{{ $detail->jumlah }}</span>
+                                <span class="text-[#706B5C]">×{{ $detail->jumlah }}</span>
                             </span>
                         @empty
-                            <span class="text-sm text-gray-400">-</span>
+                            <span class="text-sm text-[#706B5C]">-</span>
                         @endforelse
                     </div>
 
                     @if($peminjaman->status === 'dikembalikan')
-                        <div class="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
-                            <span class="text-sm text-gray-500 font-medium">Denda</span>
-                            <span class="text-sm font-bold {{ $denda > 0 ? 'text-red-600' : 'text-gray-700' }}">
+                        <div class="flex items-center justify-between bg-[#F9F8F5] rounded-md px-4 py-3 border border-[#E5E1D6]">
+                            <span class="text-sm text-[#706B5C]">Denda</span>
+                            <span class="text-sm font-mono font-medium {{ $denda > 0 ? 'text-[#B23A2E]' : 'text-[#1B1F27]' }}">
                                 Rp {{ number_format($denda ?? 0, 0, ',', '.') }}
                             </span>
                         </div>
@@ -74,16 +70,14 @@
                 </div>
             </div>
         @empty
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center">
-                <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                    <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
-                    </svg>
-                </div>
-                <p class="text-gray-500 font-medium">Belum ada riwayat peminjaman</p>
-                <p class="text-sm text-gray-400 mt-1">Ajukan peminjaman alat dari halaman Katalog.</p>
+            <div class="bg-white rounded-md border border-[#E5E1D6] p-12 text-center">
+                <svg class="w-10 h-10 text-[#E5E1D6] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+                </svg>
+                <p class="text-[#1B1F27] font-medium">Belum ada riwayat peminjaman</p>
+                <p class="text-sm text-[#706B5C] mt-1">Ajukan peminjaman alat dari halaman katalog.</p>
             </div>
         @endforelse
     </div>
-a
+
 @endsection

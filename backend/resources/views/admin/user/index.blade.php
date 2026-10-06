@@ -20,6 +20,12 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="mb-4 bg-red-50 border border-red-200 text-red-800 p-3 rounded-lg text-sm">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <!-- Form Search -->
     <form action="{{ route('admin.user.index') }}" method="GET" class="mb-4 flex items-center gap-2">
         <div class="relative w-full max-w-xs">

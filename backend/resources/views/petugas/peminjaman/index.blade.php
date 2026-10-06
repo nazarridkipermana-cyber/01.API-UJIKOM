@@ -41,6 +41,8 @@
                         'dipinjam'     => ['border' => 'border-[#3B6E71]', 'text' => 'text-[#3B6E71]'],
                         'dikembalikan' => ['border' => 'border-[#3F7D58]', 'text' => 'text-[#3F7D58]'],
                     ][$item->status] ?? ['border' => 'border-[#B23A2E]', 'text' => 'text-[#B23A2E]'];
+
+                    $isTelat = $item->tgl_kembali_plan && now()->startOfDay()->gt(\Carbon\Carbon::parse($item->tgl_kembali_plan)->startOfDay());
                 @endphp
                 <div class="border border-[#E5E1D6] border-l-2 {{ $statusColor['border'] }} rounded-md p-5 hover:bg-[#FAF9F6] transition">
                     <div class="flex flex-col lg:flex-row lg:items-center gap-5">
@@ -123,7 +125,7 @@
                                             <div class="p-5 space-y-4">
                                                 <div>
                                                     <label class="block text-sm font-medium text-[#1B1F27] mb-1.5">Kondisi alat saat kembali</label>
-                                                    <select name="kondisi_kembali" required
+                                                    <select name="kondisi_kembali" required onchange="toggleDenda(this)"
                                                         class="w-full border border-[#E5E1D6] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#C98A3B]">
                                                         <option value="Baik">Baik</option>
                                                         <option value="Rusak Ringan">Rusak ringan</option>
@@ -131,11 +133,23 @@
                                                         <option value="Hilang">Hilang</option>
                                                     </select>
                                                 </div>
-                                                <div>
-                                                    <label class="block text-sm font-medium text-[#1B1F27] mb-1.5">Denda (opsional)</label>
-                                                    <input type="number" name="denda" min="0" placeholder="0"
-                                                        class="w-full border border-[#E5E1D6] rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#C98A3B]">
+
+                                                {{-- Rusak ringan: denda otomatis Rp200.000 --}}
+                                                <div data-info-ringan class="hidden text-sm rounded-md bg-[#FBF3E4] text-[#8A5A14] border border-[#C98A3B]/40 px-3 py-2.5">
+                                                    Denda rusak ringan <span class="font-mono font-semibold">Rp200.000</span> diterapkan otomatis.
                                                 </div>
+
+                                                {{-- Rusak berat / hilang: nominal diisi petugas --}}
+                                                <div data-wrap-manual class="hidden">
+                                                    <label class="block text-sm font-medium text-[#1B1F27] mb-1.5">Denda kerusakan (Rp)</label>
+                                                    <input type="number" name="denda_manual" min="0" value="0"
+                                                        class="w-full border border-[#E5E1D6] rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#C98A3B]">
+                                                    <p class="text-xs text-[#706B5C] mt-1.5">Isi sesuai tingkat kerusakan atau nilai alat yang hilang.</p>
+                                                </div>
+
+                                                @if($isTelat)
+                                                    <p class="text-xs text-[#B23A2E]">Peminjaman ini terlambat, denda telat Rp10.000 akan ditambahkan otomatis.</p>
+                                                @endif
                                             </div>
                                             <div class="p-5 border-t border-[#E5E1D6] flex justify-end gap-2">
                                                 <button type="button" onclick="document.getElementById('modalKembali{{ $item->id }}').classList.add('hidden')"
@@ -168,4 +182,24 @@
             @endforelse
         </div>
     </div>
+
+    <script>
+        // Tampilkan info/input denda sesuai kondisi alat yang dipilih
+        function toggleDenda(select) {
+            const form    = select.closest('form');
+            const kondisi = select.value.toLowerCase().replace('_', ' ');
+            const info    = form.querySelector('[data-info-ringan]');
+            const wrap    = form.querySelector('[data-wrap-manual]');
+            const input   = form.querySelector('input[name="denda_manual"]');
+
+            const ringan = kondisi === 'rusak ringan';
+            const manual = kondisi === 'rusak berat' || kondisi === 'hilang';
+
+            info.classList.toggle('hidden', !ringan);
+            wrap.classList.toggle('hidden', !manual);
+
+            input.required = manual;
+            if (!manual) input.value = 0;
+        }
+    </script>
 @endsection

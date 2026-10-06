@@ -55,25 +55,41 @@ class PetugasController extends Controller
     {
         $request->validate([
             'kondisi_kembali' => 'required|string',
+            'denda_manual'    => 'nullable|integer|min:0',
         ]);
 
         DB::beginTransaction();
         try {
             $peminjaman = Peminjaman::with('detailPinjam')->findOrFail($peminjamanId);
 
-            // Denda otomatis: flat Rp10.000 jika sudah lewat tgl_kembali_plan
+            // Denda telat: flat Rp10.000
             $telat = now()->startOfDay()->greaterThan(
                 Carbon::parse($peminjaman->tgl_kembali_plan)->startOfDay()
             );
-            $denda = $telat ? 10000 : 0;
+            $dendaTelat = $telat ? 10000 : 0;
+
+            // Denda kerusakan berdasarkan kondisi
+            $kondisi = strtolower(str_replace('_', ' ', trim($request->kondisi_kembali)));
+            $dendaKerusakan = 0;
+
+            if ($kondisi === 'rusak ringan') {
+                $dendaKerusakan = 200000; // otomatis
+            } elseif (in_array($kondisi, ['rusak berat', 'hilang'])) {
+                $dendaKerusakan = (int) $request->input('denda_manual', $request->input('denda', 0)); // diisi petugas
+                if ($dendaKerusakan <= 0) {
+                    throw new \Exception('Isi nominal denda untuk kondisi "' . $request->kondisi_kembali . '".');
+                }
+            }
+
+            $totalDenda = $dendaTelat + $dendaKerusakan;
 
             // Simpan data pengembalian
             Pengembalian::create([
-                'peminjaman_id' => $peminjaman->id,
-                'tgl_kembali' => now(),
+                'peminjaman_id'   => $peminjaman->id,
+                'tgl_kembali'     => now(),
                 'kondisi_kembali' => $request->kondisi_kembali,
-                'denda' => $denda,
-                'petugas_id' => auth()->id(),
+                'denda'           => $totalDenda,
+                'petugas_id'      => auth()->id(),
             ]);
 
             // Update status peminjaman jadi dikembalikan
@@ -88,11 +104,18 @@ class PetugasController extends Controller
 
             DB::commit();
 
-            $pesanDenda = $telat ? ' Terlambat, denda Rp10.000 otomatis diterapkan.' : '';
+            $pesanDenda = '';
+            if ($dendaTelat > 0) {
+                $pesanDenda .= ' Denda telat Rp' . number_format($dendaTelat, 0, ',', '.') . '.';
+            }
+            if ($dendaKerusakan > 0) {
+                $pesanDenda .= ' Denda kerusakan Rp' . number_format($dendaKerusakan, 0, ',', '.') . '.';
+            }
+
             return redirect()->back()->with('success', 'Pengembalian berhasil dicatat dan stok dipulihkan.' . $pesanDenda);
         } catch (\Exception $e) {
             DB::rollback();
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 

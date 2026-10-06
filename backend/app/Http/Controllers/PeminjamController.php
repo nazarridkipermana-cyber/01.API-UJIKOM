@@ -21,7 +21,8 @@ class PeminjamController extends Controller
     public function ajukanPeminjaman(Request $request)
     {
         $request->validate([
-            'tgl_kembali_plan' => 'required|date|after:today',
+            'tgl_pinjam' => 'required|date',
+            'tgl_kembali_plan' => 'required|date|after:tgl_pinjam',
             'alat_id' => 'required|array',
             'jumlah' => 'required|array',
         ]);
@@ -31,7 +32,7 @@ class PeminjamController extends Controller
             // Buat header peminjaman
             $peminjaman = Peminjaman::create([
                 'user_id' => auth()->id(),
-                'tgl_pinjam' => now(),
+                'tgl_pinjam' => $request->tgl_pinjam,
                 'tgl_kembali_plan' => $request->tgl_kembali_plan,
                 'status' => 'diajukan',
             ]);
@@ -63,4 +64,4 @@ class PeminjamController extends Controller
 
         return view('peminjam.riwayat', compact('peminjamans'));
     }
-}
+}   
