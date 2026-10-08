@@ -33,7 +33,7 @@
             content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 2px;
             background: linear-gradient(180deg, #000 0 33.3%, var(--de-red) 33.3% 66.6%, var(--de-gold) 66.6%);
         }
-        .de-brand { padding: 26px 22px 20px; }
+        .de-brand { padding: 26px 20px 20px; }
         .de-logo {
             width: 38px; height: 38px; border-radius: 10px; overflow: hidden;
             display: flex; flex-direction: column; flex-shrink: 0;
@@ -43,8 +43,8 @@
         .de-logo i:nth-child(1) { background: #000; }
         .de-logo i:nth-child(2) { background: var(--de-red); }
         .de-logo i:nth-child(3) { background: var(--de-gold); }
-        .de-title { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: .26em; color: #fff; line-height: 1.1; }
-        .de-sub { margin-top: 5px; font-size: 9.5px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--de-gold); }
+        .de-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .14em; color: #fff; line-height: 1.1; white-space: nowrap; }
+        .de-sub { margin-top: 5px; font-size: 8.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--de-gold); white-space: nowrap; }
         .de-divider { height: 1px; margin: 0 22px; background: linear-gradient(90deg, rgba(255, 206, 0, .55), rgba(255, 255, 255, .06) 70%, transparent); }
         .de-section { padding: 22px 26px 8px; font-size: 10px; font-weight: 600; letter-spacing: .25em; text-transform: uppercase; color: rgba(255, 255, 255, .32); }
 
@@ -86,6 +86,14 @@
         }
         .de-user-name { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.2; }
         .de-user-role { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--de-gold); margin-top: 2px; }
+
+        /* Foto profil di kartu user + efek klik */
+        .de-avatar-img {
+            width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; object-fit: cover;
+            box-shadow: 0 0 0 2px rgba(255, 206, 0, .25);
+        }
+        a.de-user { transition: background .2s ease, border-color .2s ease; }
+        a.de-user:hover { background: rgba(255, 255, 255, .08); border-color: rgba(255, 206, 0, .35); }
 
         .de-logout-side {
             width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -186,13 +194,18 @@
 
             <div class="de-divider"></div>
 
-            <div class="de-user">
-                <div class="de-avatar">{{ strtoupper(mb_substr($nama, 0, 1)) }}</div>
+            <!-- Kartu user (klik untuk membuka halaman profil) -->
+            <a href="{{ route('profil.edit') }}" class="de-user" title="Ubah profil">
+                @if(auth()->user()->foto_profile)
+                    <img src="{{ asset(auth()->user()->foto_profile) }}" alt="Foto {{ $nama }}" class="de-avatar-img">
+                @else
+                    <div class="de-avatar">{{ strtoupper(mb_substr($nama, 0, 1)) }}</div>
+                @endif
                 <div class="min-w-0">
                     <div class="de-user-name truncate">{{ $nama }}</div>
                     <div class="de-user-role">Peminjam</div>
                 </div>
-            </div>
+            </a>
 
             <form action="{{ route('logout') }}" method="POST" class="px-4 pb-5">
                 @csrf
@@ -221,4 +234,4 @@
         </div>
     </div>
 </body>
-</html>
+</html> 
