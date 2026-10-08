@@ -1,16 +1,23 @@
-@extends('layouts.app')
+@extends($layout)
 
 @section('content')
 <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-sm border border-gray-200">
     <div class="flex justify-between items-center mb-6 border-b pb-4">
         <div>
-            <h3 class="text-xl font-bold text-gray-800">Edit Data Pengguna</h3>
-            <p class="text-sm text-gray-500">Ubah informasi akun dan hak akses pengguna.</p>
+            <h3 class="text-xl font-bold text-gray-800">Profil Saya</h3>
+            <p class="text-sm text-gray-500">Ubah foto, nama, nomor HP, atau password akunmu.</p>
         </div>
-        <a href="{{ route('admin.user.index') }}" class="text-sm text-gray-600 hover:text-gray-900 font-semibold">
+        <a href="{{ url()->previous() }}" class="text-sm text-gray-600 hover:text-gray-900 font-semibold">
             &larr; Kembali
         </a>
     </div>
+
+    {{-- Layout petugas & peminjam sudah menampilkan notifikasi sendiri, hanya admin yang belum --}}
+    @if(session('success') && $user->role === 'admin')
+        <div class="mb-4 bg-green-50 border border-green-200 text-green-800 p-3 rounded-lg text-sm">
+            {{ session('success') }}
+        </div>
+    @endif
 
     @if($errors->any())
         <div class="mb-4 bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-sm">
@@ -22,7 +29,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.user.update', $user->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+    <form action="{{ route('profil.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
         @csrf
         @method('PUT')
 
@@ -52,21 +59,8 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input type="email" name="email" value="{{ old('email', $user->email) }}" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required>
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Password Baru <span class="text-xs text-gray-500 font-normal">(Kosongkan jika tidak diubah)</span></label>
-            <input type="password" name="password" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="Minimal 8 karakter">
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Role / Hak Akses</label>
-            <select name="role" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required>
-                <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
-                <option value="petugas" {{ old('role', $user->role) == 'petugas' ? 'selected' : '' }}>Petugas</option>
-                <option value="peminjam" {{ old('role', $user->role) == 'peminjam' ? 'selected' : '' }}>Peminjam</option>
-            </select>
+            <input type="email" value="{{ $user->email }}" class="w-full border border-gray-200 bg-gray-50 text-gray-500 rounded-lg p-2.5 text-sm" disabled>
+            <p class="text-xs text-gray-500 mt-1">Email dan role hanya bisa diubah oleh admin.</p>
         </div>
 
         <div>
@@ -74,12 +68,19 @@
             <input type="text" name="no_hp" value="{{ old('no_hp', $user->no_hp) }}" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
         </div>
 
+        <div class="pt-2 border-t">
+            <p class="text-sm font-semibold text-gray-700 mt-3 mb-2">Ganti Password <span class="text-xs text-gray-500 font-normal">(Kosongkan jika tidak diubah)</span></p>
+            <div class="space-y-3">
+                <input type="password" name="password" placeholder="Password baru (minimal 8 karakter)"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+                <input type="password" name="password_confirmation" placeholder="Ulangi password baru"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+            </div>
+        </div>
+
         <div class="pt-4 flex justify-end space-x-2 border-t">
-            <a href="{{ route('admin.user.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-4 py-2 rounded-lg transition">
-                Batal
-            </a>
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
-                Update User
+                Simpan Profil
             </button>
         </div>
     </form>

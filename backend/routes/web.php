@@ -5,6 +5,7 @@
     use App\Http\Controllers\PetugasController;
     use App\Http\Controllers\PeminjamController;
     use App\Http\Controllers\AuthController;
+    use App\Http\Controllers\ProfilController;
 
     Route::get('/', function () {
         if (auth()->check()) {
@@ -80,6 +81,12 @@
         Route::get('/katalog', [PeminjamController::class, 'katalogAlat'])->name('katalog');
         Route::post('/peminjaman/ajukan', [PeminjamController::class, 'ajukanPeminjaman'])->name('peminjaman.ajukan');
         Route::get('/peminjaman/riwayat', [PeminjamController::class, 'riwayatPeminjaman'])->name('riwayat');
+    });
+
+    // Profil (semua role yang sudah login: admin, petugas, peminjam)
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/profil', [ProfilController::class, 'edit'])->name('profil.edit');
+        Route::put('/profil', [ProfilController::class, 'update'])->name('profil.update');
     });
 
     // Route Tamu (Belum Login)

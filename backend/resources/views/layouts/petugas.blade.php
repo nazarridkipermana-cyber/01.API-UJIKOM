@@ -87,6 +87,14 @@
         .de-user-name { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.2; }
         .de-user-role { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--de-gold); margin-top: 2px; }
 
+        /* Foto profil di kartu user + efek klik */
+        .de-avatar-img {
+            width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; object-fit: cover;
+            box-shadow: 0 0 0 2px rgba(255, 206, 0, .25);
+        }
+        a.de-user { transition: background .2s ease, border-color .2s ease; }
+        a.de-user:hover { background: rgba(255, 255, 255, .08); border-color: rgba(255, 206, 0, .35); }
+
         .de-logout-side {
             width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
             padding: 11px 16px; border-radius: 10px;
@@ -200,13 +208,18 @@
 
             <div class="de-divider"></div>
 
-            <div class="de-user">
-                <div class="de-avatar">{{ strtoupper(mb_substr($nama, 0, 1)) }}</div>
+            <!-- Kartu user (klik untuk membuka halaman profil) -->
+            <a href="{{ route('profil.edit') }}" class="de-user" title="Ubah profil">
+                @if(auth()->user()->foto_profile)
+                    <img src="{{ asset(auth()->user()->foto_profile) }}" alt="Foto {{ $nama }}" class="de-avatar-img">
+                @else
+                    <div class="de-avatar">{{ strtoupper(mb_substr($nama, 0, 1)) }}</div>
+                @endif
                 <div class="min-w-0">
                     <div class="de-user-name truncate">{{ $nama }}</div>
                     <div class="de-user-role">Petugas</div>
                 </div>
-            </div>
+            </a>
 
             <form action="{{ route('logout') }}" method="POST" class="px-4 pb-5">
                 @csrf

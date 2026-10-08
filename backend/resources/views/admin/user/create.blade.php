@@ -25,8 +25,18 @@
     @endif
 
     <!-- Form Create User -->
-    <form action="{{ route('admin.user.store') }}" method="POST" class="space-y-4">
+    <form action="{{ route('admin.user.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
         @csrf
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Foto Profil (Opsional)</label>
+            <div class="flex items-center gap-4">
+                <img id="previewFoto" src="" alt="Preview foto" class="hidden w-16 h-16 rounded-full object-cover border border-gray-200">
+                <input type="file" name="foto_profile" id="inputFoto" accept="image/png,image/jpeg"
+                    class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Format JPG atau PNG, maksimal 2 MB.</p>
+        </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
@@ -68,4 +78,18 @@
         </div>
     </form>
 </div>
+
+<script>
+    // Preview foto sebelum disimpan
+    document.getElementById('inputFoto').addEventListener('change', function () {
+        const preview = document.getElementById('previewFoto');
+        const file = this.files[0];
+        if (file) {
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+        } else {
+            preview.classList.add('hidden');
+        }
+    });
+</script>
 @endsection

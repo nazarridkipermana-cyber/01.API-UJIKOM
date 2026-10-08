@@ -62,7 +62,19 @@
             <tbody class="text-gray-700 text-sm">
                 @forelse($users as $user)
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="py-3 px-4 border-b font-medium text-gray-900">{{ $user->name }}</td>
+                        <td class="py-3 px-4 border-b font-medium text-gray-900">
+                            <div class="flex items-center gap-3">
+                                @if($user->foto_profile)
+                                    <img src="{{ asset($user->foto_profile) }}" alt="Foto {{ $user->name }}"
+                                         class="w-9 h-9 rounded-full object-cover border border-gray-200">
+                                @else
+                                    <div class="w-9 h-9 rounded-full bg-gray-800 text-yellow-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    </div>
+                                @endif
+                                <span>{{ $user->name }}</span>
+                            </div>
+                        </td>
                         <td class="py-3 px-4 border-b">{{ $user->email }}</td>
                         <td class="py-3 px-4 border-b">
                             <span class="px-2.5 py-1 text-xs font-semibold rounded-full 

@@ -255,15 +255,25 @@ class AdminController extends Controller
             'password' => 'required|string|min:8',
             'role'     => 'required|in:admin,petugas,peminjam',
             'no_hp'    => 'nullable|string|max:20',
+            'foto_profile' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        User::create([
+        $data = [
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => bcrypt($request->password),
             'role'     => $request->role,
             'no_hp'    => $request->no_hp,
-        ]);
+        ];
+
+        if ($request->hasFile('foto_profile')) {
+            $file = $request->file('foto_profile');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('storage/profil'), $filename);
+            $data['foto_profile'] = 'storage/profil/' . $filename;
+        }
+
+        User::create($data);
 
         LogAktivitas::create([
             'user_id'   => auth()->id(),
@@ -288,6 +298,7 @@ class AdminController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $id,
             'role'  => 'required|in:admin,petugas,peminjam',
             'no_hp' => 'nullable|string|max:20',
+            'foto_profile' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $data = [
@@ -296,6 +307,18 @@ class AdminController extends Controller
             'role'  => $request->role,
             'no_hp' => $request->no_hp,
         ];
+
+        if ($request->hasFile('foto_profile')) {
+            // Hapus foto lama kalau ada
+            if ($user->foto_profile && file_exists(public_path($user->foto_profile))) {
+                unlink(public_path($user->foto_profile));
+            }
+
+            $file = $request->file('foto_profile');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('storage/profil'), $filename);
+            $data['foto_profile'] = 'storage/profil/' . $filename;
+        }
 
         if ($request->filled('password')) {
             $request->validate(['password' => 'min:8']);
@@ -345,6 +368,12 @@ class AdminController extends Controller
         }
 
         $nama = $user->name;
+
+        // Hapus file foto profil kalau ada
+        if ($user->foto_profile && file_exists(public_path($user->foto_profile))) {
+            unlink(public_path($user->foto_profile));
+        }
+
         $user->delete();
 
         LogAktivitas::create([
